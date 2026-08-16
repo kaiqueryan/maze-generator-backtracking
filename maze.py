@@ -39,7 +39,7 @@ class BacktrackingMaze:
         self.maze[startPointY1 - self.wallSize : startPointY1, startPointX1 : startPointX2] = 255
         self.maze[endPointY1 : endPointY2, endPointX1 : endPointX2] = 255
 
-        while self.actualCell != (400, 400) and self.stop != 'y':
+        while self.stop != 'y':
             self.chooseAction()
         
         opencv.imshow("Maze", self.maze)
@@ -49,129 +49,125 @@ class BacktrackingMaze:
 
     def chooseAction(self):  
 
-        row, column = self.actualCell
+        actions = [
+            'up',
+            'down',
+            'left',
+            'right'
+        ]
 
-        print('actualCell:', self.actualCell)
-
-        actions = {
-            'up': (row - 1, column), 
-            'down': (row + 1, column),  
-            'left': (row, column - 1),
-            'right': (row, column + 1)
-        }
-
-        randomAction = random.choice(list(actions.keys()))
+        randomAction = random.choice(actions)
         print('randomAction:', randomAction) 
-
-        if randomAction == 'up' and self.actualCell[0] <= 4: 
-            print('Action not valid:', randomAction)
-            return
-
-        if randomAction == 'left' and self.actualCell[1] < 40:
-            print('Action not valid:', randomAction)
-            return
-
-        if randomAction == 'right' and self.actualCell[1] >= 90:
-            print('Action not valid:', randomAction)
-            return
-        
-        if randomAction == 'down' and self.actualCell[0] >= 366:
-            print('Action not valid:', randomAction)
-            return
          
         if randomAction == 'down':
-            self.moveDown(actions[randomAction]) 
+            self.moveDown() 
 
         if randomAction == 'up':
-            self.moveUp(actions[randomAction])
+            self.moveUp()
 
         if randomAction == 'left':
-            self.moveLeft(actions[randomAction])
+            self.moveLeft()
 
         if randomAction == 'right':
-            self.moveRight(actions[randomAction])
+            self.moveRight()
 
         self.stop = input('Stop? (y/n): ')
 
 
-    def moveDown(self, action): 
+    def moveRight(self):
 
-        if not self.isValidAction(action):
-            print('Action not valid:', action)
+        row, column = self.actualCell
+        actionCell = (row, column + 1)
+
+        if actionCell in self.visitedCells:
+            print('Cell already visited.')
             return
 
-        row, column = self.actualCell 
-      
-        y2 = action[0] * self.cellSize
-        x1 = column * self.cellSize + self.wallSize
-        x2 = (column + 1) * self.cellSize
-
-        self.maze[y2 : y2 + self.wallSize, x1 : x2] = 255  
-
-        self.visitedCells.append(action)
-
-    
-    def moveUp(self, action):
-
-        if not self.isValidAction(action):
-            print('Action not valid:', action)
+        if column + 1 >= self.mazeSize:
+            print('Cannot move right, out of bounds.')
             return
-
-        row, column = self.actualCell 
-
-        y1 = action[0] * self.cellSize + self.wallSize
-        x1 = column * self.cellSize + self.wallSize
-        x2 = (column + 1) * self.cellSize
-
-        self.maze[y1 - self.wallSize : y1, x1 : x2] = 255  
-
-        self.visitedCells.append(action)
-        
-
-    def moveLeft(self, action):
-
-        if not self.isValidAction(action):
-            print('Action not valid:', action)
-            return
-
-        row, column = self.actualCell 
-
-        y1 = row * self.cellSize + self.wallSize 
-        y2 = (row + 1) * self.cellSize
-        x1 = action[1] * self.cellSize
-
-        self.maze[y1 : y2, x1 : x1 + self.wallSize] = 255  
-
-        self.visitedCells.append(action)
-        
-
-    def moveRight(self, action):  
-
-        if not self.isValidAction(action):
-            print('Action not valid:', action)
-            return
-
-        row, column = self.actualCell 
 
         y1 = row * self.cellSize + self.wallSize
+        x1 = column * self.cellSize
         y2 = (row + 1) * self.cellSize
-        x1 = action[1] * self.cellSize
+        x2 = (column + 1) * self.cellSize + self.wallSize
 
-        self.maze[y1 : y2, x1 : x1 + self.wallSize] = 255  
+        self.maze[y1 : y2, x2 - self.wallSize : x2] = 255
 
-        self.visitedCells.append(action)
+        self.actualCell = (row, column + 1)  
+        self.visitedCells.append(self.actualCell)
 
 
-    def isValidAction(self, action):
+    def moveLeft(self):
 
-        row, column = action 
+        row, column = self.actualCell
+        actionCell = (row, column - 1)
 
-        if action not in self.visitedCells:
-            self.actualCell = action
-            return True
-        else:
-            return False
-    
+        if actionCell in self.visitedCells:
+            print('Cell already visited.')
+            return
+
+        if column == 0:
+            print('Cannot move left, already at the leftmost column.')
+            return
+
+        y1 = row * self.cellSize + self.wallSize
+        x1 = column * self.cellSize + self.wallSize
+        y2 = (row + 1) * self.cellSize
+        x2 = (column + 1) * self.cellSize
+
+        self.maze[y1 : y2, x1 - self.wallSize: x2] = 255
+
+        self.actualCell = (row, column - 1)  
+        self.visitedCells.append(self.actualCell)
+
+
+    def moveDown(self):
+
+        row, column = self.actualCell
+        actionCell = (row + 1, column)
+
+        if actionCell in self.visitedCells:
+            print('Cell already visited.')
+            return
+
+        if row + 1 >= self.mazeSize:
+            print('Cannot move down, out of bounds.')
+            return
+
+        y1 = row * self.cellSize
+        x1 = column * self.cellSize + self.wallSize
+        y2 = (row + 1) * self.cellSize
+        x2 = (column + 1) * self.cellSize
+
+        self.maze[y2 : y2 + self.wallSize, x1 : x2] = 255
+
+        self.actualCell = (row + 1, column)  
+        self.visitedCells.append(self.actualCell)
+
+    def moveUp(self):
+
+        row, column = self.actualCell
+        actionCell = (row - 1, column)
+
+        if actionCell in self.visitedCells:
+            print('Cell already visited.')
+            return
+
+        if row == 0:
+            print('Cannot move up, already at the top row.')
+            return
+
+        y1 = row * self.cellSize
+        x1 = column * self.cellSize + self.wallSize
+        y2 = (row + 1) * self.cellSize
+        x2 = (column + 1) * self.cellSize
+
+        self.maze[y1 : y1 + self.wallSize, x1 : x2] = 255
+
+        self.actualCell = (row - 1, column)  
+        self.visitedCells.append(self.actualCell)  
+   
 
 maze = BacktrackingMaze(10)
 maze.generateMaze()
